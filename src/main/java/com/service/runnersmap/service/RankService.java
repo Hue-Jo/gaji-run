@@ -9,14 +9,12 @@ import com.service.runnersmap.repository.RankRepository;
 import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.repository.UserRepository;
 import com.service.runnersmap.type.ErrorCode;
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,10 +27,10 @@ public class RankService {
   private final RankRepository rankRepository;
   private final UserRepository userRepository;
 
-  /*
-   * 랭킹 조회
-   * - 상위 20 등까지만 조회
-   * - 추가아이디어 : 본인 등수도 조회
+
+  /**
+   * 조회 연도,월 상위 20위 랭킹 조회
+   * 페이징 처리를 통해 100위까지 보여주는 것으로 수정 예정  (한 페이지당 20)
    */
   @Transactional(readOnly = true)
   public List<Rank> searchRankByMonth(Integer year, Integer month
@@ -40,7 +38,6 @@ public class RankService {
     return rankRepository.findAllByRankPositionBetweenAndYearAndMonthOrderByRankPosition(1, 20,
         year, month);
   }
-
 
   /*
    * < 랭킹 집계 > : rankJob 에서 호출
@@ -54,16 +51,17 @@ public class RankService {
    *  21.0975km 이상 : 1.4  (하프마라톤)
    *  42.195km 이상  : 1.5  (마라톤)
    */
+
+  /**
+   * 월별 러닝 기록을 바탕으로 랭킹 계산/저장하는 메서드
+   */
   @Transactional
   public void saveRankingByMonth(Integer year, Integer month) throws Exception {
-//    LocalDate currentDate = LocalDate.now();
-//    Integer year = currentDate.getYear();
-//    Integer month = currentDate.getMonthValue();
 
     // 조회년월 랭킹 데이터 삭제 (매일 초기화)
     rankRepository.deleteByYearAndMonth(year, month);
 
-    // 조회년월의 유효한 러너 기록
+    // 조회년월의 유효한 러너 기록 (실제 종료 시간이 있는 기록만)
     List<UserPost> monthRunRecords = userPostRepository.findAllByValidYnIsTrueAndYearAndMonthAndActualEndTimeIsNotNull(
         year,
         month);
@@ -71,8 +69,10 @@ public class RankService {
       return;
     }
 
+    // 조회한 기록을 바탕으로 점수 계산
     List<RankSaveDto> monthSortRank = monthRunRecords.stream()
         .map(userPost -> {
+          // 거리, 시간 기반 점수 계산
           double baseScore = calDistanceWeight(userPost);
           return RankSaveDto.builder()
               .userId(userPost.getUser().getId())
@@ -97,11 +97,13 @@ public class RankService {
         .sorted(Comparator.comparingDouble(RankSaveDto::getScore).reversed()) // 점수 기준 내림차순 정렬
         .collect(Collectors.toList());
 
+    // 정렬된 목록 순회하며 랭킹 데이터 저장
     int rank = 0;
     for (RankSaveDto rankItem : monthSortRank) {
       User user = userRepository.findById(rankItem.getUserId())
           .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
+      // 랭크 객체 생성, 저장
       Rank newRank = new Rank();
       newRank.setUser(user);
       newRank.setYear(year);
@@ -114,12 +116,20 @@ public class RankService {
 
   }
 
+
+  /**
+   * 거리 & 시간 바탕 점수 계산 메서드 거리에 따라 가중치 부여하여 점수 계산
+   */
   private double calDistanceWeight(UserPost userPost) {
     double totalTimeInSeconds = userPost.getRunningDuration().toMillis() / 1000.0;
     if (totalTimeInSeconds == 0) {
       return 0;
     }
+
+    // 기본점수 = 거리 / 시간
     double baseScore = userPost.getTotalDistance() / totalTimeInSeconds;
+
+    // 거리에 따라 가중치 적용
     if (userPost.getTotalDistance() >= 42195) {
       baseScore *= 1.5; // 마라톤
     } else if (userPost.getTotalDistance() >= 21097.5) {

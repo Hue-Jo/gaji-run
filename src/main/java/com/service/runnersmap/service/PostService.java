@@ -38,9 +38,14 @@ public class PostService {
 
   private final LikesRepository likesRepository;
 
+
+  /**
+   * 모집글 조회
+   */
   @Transactional(readOnly = true)
   public List<PostDto> searchPost(PostInDto inDto) throws Exception {
 
+    // 검색 조건에 맞는 모집글 리스트 가져오기
     List<Post> posts = postRepository.findAllWithin2Km(
         inDto.getLat(),
         inDto.getLng(),
@@ -57,6 +62,7 @@ public class PostService {
 
     return posts.stream()
         .map(post -> {
+              // 인증샷이 있는 경우 인증샷 정보를 조회하여 Dto에 담음
               AfterRunPictureDto afterRunPictureDto = new AfterRunPictureDto();
               if (post.getArriveYn()) {
                 // 완료된 postId 기준으로 인증샷 내역을 가져온다.
@@ -88,11 +94,16 @@ public class PostService {
 
         ).filter(post -> !post.getArriveYn() || (post.getArriveYn()
             && post.getAfterRunPictureUrl() != null))
+        // 인증샷이 완료된 경우에만 리스트에 포함
         .collect(Collectors.toList());
 
 
   }
 
+
+  /**
+   * 인증샷 조회 메서드
+   */
   public AfterRunPictureDto viewAfterRunPictureForPost(Post post) {
     log.info("인증샷 조회 요청 : 모집글Id = {}", post.getPostId());
     Optional<AfterRunPicture> afterRunPicture = afterRunPictureRepository.findByPost(post);
@@ -100,7 +111,7 @@ public class PostService {
       AfterRunPicture picture = afterRunPicture.get();
       int likeCount = likesRepository.countByAfterRunPicture(afterRunPicture.get());
 
-      // 좋아요 누른 사용자 리스트 조회
+      // 인증샷에 좋아요 누른 사용자 ID 리스트 조회
       List<Long> likeUserIds = likesRepository.findByAfterRunPicture(picture)
           .stream()
           .map(likes -> likes.getUser().getId())
@@ -117,14 +128,20 @@ public class PostService {
     }
   }
 
+
+  /**
+   * 특정 모집글의 상세 정보를 조회하는 메서드
+   */
   @Transactional(readOnly = true)
   public PostDto searchDetailPost(Long postId) throws Exception {
     Post post = postRepository.findById(postId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA));
 
+    // 모집글에 참가한 유효한 사용자 조회
     List<UserPost> userPosts = userPostRepository.findAllByPost_PostIdAndValidYnIsTrue(postId);
     PostDto postDto = PostDto.fromEntity(post);
 
+    // 사용자 정보를 DTO에 담아 반환
     List<PostUserDto> postUserDtoList = userPosts.stream()
         .map(userPost -> {
           PostUserDto postUserDto = new PostUserDto();
@@ -139,6 +156,10 @@ public class PostService {
     return postDto;
   }
 
+
+  /**
+   * 모집글 등록 메서드
+   */
   @Transactional
   public Post registerPost(PostDto postDto) throws Exception {
 
@@ -152,7 +173,7 @@ public class PostService {
       throw new RunnersMapException(ErrorCode.ALREADY_EXISTS_POST_DATA);
     }
 
-    // post 테이블 insert
+    // post 엔티티 저장
     Post post = postRepository.save(Post.builder()
         .admin(user)
         .title(postDto.getTitle())
@@ -173,7 +194,7 @@ public class PostService {
 
     log.info("[RUNNERS LOG] register postId: {} ", post.getPostId());
 
-    // 그룹 사용자에 그룹장을 추가한다.
+    // 그룹 사용자에 그룹장 추가
     UserPost userPost = new UserPost();
     userPost.setPost(post);
     userPost.setUser(user);
@@ -189,6 +210,10 @@ public class PostService {
 
   }
 
+
+  /**
+   * 모집글 수정 메서드
+   */
   @Transactional
   public void modifyPost(PostDto postDto) throws Exception {
     Optional<Post> postItem = postRepository.findById(postDto.getPostId());
@@ -217,6 +242,10 @@ public class PostService {
     }
   }
 
+
+  /**
+   * 모집글 삭제 메서드
+   */
   @Transactional
   public void deletePost(Long postId) throws Exception {
     /*
@@ -232,13 +261,14 @@ public class PostService {
       validatePost(post);
 
       // 1. userPost 데이터 삭제 (post에 참여한 모든 사용자 - 최소한 그룹장은 등록되어 있음 )
+      // 모집글에 참여하기로 했던 사용자 데이터 삭제
       int delCnt = userPostRepository.deleteByPost_PostId(postId);
       if (delCnt < 0) {
         throw new RunnersMapException(ErrorCode.NOT_FOUND_USER);
       }
       log.info("[RUNNERS LOG] delete userPost Cnt : {} ", delCnt);
 
-      // 2. Post 데이터 삭제
+      // 2. Post 데이터 삭제 (모집글 삭제)
       postRepository.deleteById(post.getPostId());
 
       log.info("[RUNNERS LOG] delete postId : {} ", postId);
@@ -248,6 +278,10 @@ public class PostService {
     }
   }
 
+
+  /**
+   * 모집글 상태 검증 메서드
+   */
   private void validatePost(Post post) {
     // 해당 채팅방의 그룹장 이외에는 불가
 //    if (!post.getAdmin().getId().equals(post.getAdminId())) {
