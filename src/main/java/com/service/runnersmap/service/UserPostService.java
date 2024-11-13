@@ -12,6 +12,7 @@ import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.repository.UserRepository;
 import com.service.runnersmap.type.ErrorCode;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +41,11 @@ public class UserPostService {
   @Transactional(readOnly = true)
   public List<PostDto> listParticipatePost(Long userId) throws Exception {
 
+    // 사용자가 참여 중인 유효한 모집글(러닝이 종료되지 않은 것)을 조회
     return userPostRepository.findAllByUser_IdAndValidYnIsTrueAndActualEndTimeIsNull(userId)
         .stream()
         .map(userPost -> {
+          // 참여 중인 각 모집글의 ID를 통해 모집글 상세 정보 조회
           Post post = postRepository.findById(userPost.getPost().getPostId())
               .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA));
           return PostDto.fromEntity(post);
@@ -61,14 +64,14 @@ public class UserPostService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
-    Post post = postRepository.findById(postId)
+    Post newPost = postRepository.findById(postId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA));
 
     // 이미 출발/도착한 상태의 모집글인 경우, 참여할 수 없도록 함
-    if (post.getDepartureYn()) {
+    if (newPost.getDepartureYn()) {
       throw new RunnersMapException(ErrorCode.ALREADY_DEPARTURE_POST_DATA);
     }
-    if (post.getArriveYn()) {
+    if (newPost.getArriveYn()) {
       throw new RunnersMapException(ErrorCode.ALREADY_COMPLETE_POST_DATA);
     }
 
@@ -79,14 +82,27 @@ public class UserPostService {
       throw new RunnersMapException(ErrorCode.ALREADY_PARTICIPATE_USER);
     }
 
+
+    // 새로운 모집글에 참여할 때 기존 모집글의 시작일 이후 날짜로 제한  (다음날부터 새로운 모집글에 참여 가능)
+    List<UserPost> existingUserPosts = userPostRepository.findByUser_IdAndValidYnIsTrue(userId);
+
+    for (UserPost existingPost : existingUserPosts) {
+      LocalDate existingPostStartDate = existingPost.getPost().getStartDateTime().toLocalDate();
+      LocalDate newPostSTartDate = newPost.getStartDateTime().toLocalDate();
+
+      if (!newPostSTartDate.isAfter(existingPostStartDate)) {
+        throw new RunnersMapException(ErrorCode.OVERLAPPING_POST_DATE);
+      }
+    }
+
     // 참여자 정보 저장
     UserPost newUserPost = new UserPost();
     newUserPost.setUser(user);
-    newUserPost.setPost(post);
+    newUserPost.setPost(newPost);
     newUserPost.setValidYn(true);
-    newUserPost.setTotalDistance(post.getDistance());
-    newUserPost.setYear(post.getStartDateTime().getYear());
-    newUserPost.setMonth(post.getStartDateTime().getMonthValue());
+    newUserPost.setTotalDistance(newPost.getDistance());
+    newUserPost.setYear(newPost.getStartDateTime().getYear());
+    newUserPost.setMonth(newPost.getStartDateTime().getMonthValue());
     userPostRepository.save(newUserPost);
 
 
@@ -103,15 +119,14 @@ public class UserPostService {
     Post post = postRepository.findById(postId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA));
 
+    // 참여 정보 조회
     Optional<UserPost> optionalUserPost = userPostRepository.findByUser_IdAndPost_PostIdAndValidYnIsTrue(
         userId, postId);
     if (optionalUserPost.isPresent()) {
       UserPost userPost = optionalUserPost.get();
-      // 실제달린 시간, 유효여부 false 처리
       userPost.setActualEndTime(null); // 실제 종료시간 초기화
       userPost.setValidYn(false); // 유효여부 false 처리
-      userPostRepository.save(userPost);
-
+      userPostRepository.save(userPost); // 변경 사항 저장
     } else {
       throw new RunnersMapException(ErrorCode.NOT_FOUND_USER_POST_DATA);
     }
@@ -135,7 +150,7 @@ public class UserPostService {
     }
 
     if (!post.getDepartureYn()) {
-      // 첫번째로 사용자가 출발 눌렀을 때 post 테이블 update
+      // 첫번째로 사용자가 출발 눌렀을 때 post 테이블의 출발여부를 true로 변경
       post.setDepartureYn(true); // 출발여부
       postRepository.save(post);
     }
@@ -178,7 +193,7 @@ public class UserPostService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
-    // userPost 테이블 update
+    // userPost 테이블 update (러닝 종료시간, 거리, 시간 업데이트)
     Optional<UserPost> optionalUserPost =
         userPostRepository.findByUser_IdAndPost_PostIdAndValidYnIsTrue(userId, postId);
     if (optionalUserPost.isPresent()) {

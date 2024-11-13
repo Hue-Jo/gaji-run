@@ -34,6 +34,8 @@ public enum ErrorCode {
 
   NOT_FINISHED_RUNNING("러닝이 완료된 후에만 인증샷을 업로드할 수 있습니다."),
 
+  OVERLAPPING_POST_DATE("이전 러닝 시간과 겹칩니다. 마지막 러닝 다음날부터 새롭게 참여 가능합니다"),
+
   // 유저 관련 에러코드
   INVALID_REFRESH_TOKEN("유효하지 않은 토큰입니다."),
 

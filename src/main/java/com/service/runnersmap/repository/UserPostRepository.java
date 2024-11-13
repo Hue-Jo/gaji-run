@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface UserPostRepository extends JpaRepository<UserPost, Long> {
 
+  // 사용자가 참여한 모든 모집글 리스트 조회 (유효한 모집글만)
+  List<UserPost> findByUser_IdAndValidYnIsTrue(Long userId);
+
   // 유저별 러닝리스트
   List<UserPost> findAllByUser_IdAndValidYnIsTrueAndActualEndTimeIsNull(Long userId);
 
