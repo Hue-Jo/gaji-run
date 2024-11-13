@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,14 +31,21 @@ public class RankService {
 
 
   /**
-   * 조회 연도,월 상위 20위 랭킹 조회
-   * 페이징 처리를 통해 100위까지 보여주는 것으로 수정 예정  (한 페이지당 20)
+   * 조회 연도,월 랭킹 조회
+   * 페이징 처리를 통해 100위까지 보여주는 것으로 수정 (한 페이지당 20)
    */
   @Transactional(readOnly = true)
-  public List<Rank> searchRankByMonth(Integer year, Integer month
-  ) throws Exception {
-    return rankRepository.findAllByRankPositionBetweenAndYearAndMonthOrderByRankPosition(1, 20,
-        year, month);
+  public Page<Rank> searchRankByMonth(Integer year, Integer month, Pageable pageable) throws Exception {
+
+    int startRankPosition = 1;
+    int endRankPosition = 100;
+
+    return rankRepository.findAllByRankPositionBetweenAndYearAndMonthOrderByRankPosition(
+        startRankPosition,
+        endRankPosition,
+        year,
+        month,
+        pageable);
   }
 
   /*
@@ -104,13 +113,23 @@ public class RankService {
           .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
       // 랭크 객체 생성, 저장
-      Rank newRank = new Rank();
-      newRank.setUser(user);
-      newRank.setYear(year);
-      newRank.setMonth(month);
-      newRank.setRankPosition(++rank);
-      newRank.setTotalDistance(rankItem.getTotalDistance());
-      newRank.setTotalTime(rankItem.getRunningDuration());
+      Rank newRank = Rank.builder()
+          .user(user)
+          .year(year)
+          .month(month)
+          .rankPosition(++rank)
+          .totalDistance(rankItem.getTotalDistance())
+          .totalTime(rankItem.getRunningDuration())
+          .build();
+
+//      Rank newRank = new Rank();
+//      newRank.setUser(user);
+//      newRank.setYear(year);
+//      newRank.setMonth(month);
+//      newRank.setRankPosition(++rank);
+//      newRank.setTotalDistance(rankItem.getTotalDistance());
+//      newRank.setTotalTime(rankItem.getRunningDuration());
+
       rankRepository.save(newRank);
     }
 
