@@ -40,7 +40,8 @@ public class PostService {
 
 
   /**
-   * 모집글 조회
+   * 모집글 조회 (다양한 필터 적용)
+   * 러닝이 완료된 모집글은 인증샷 정보로 반환
    */
   @Transactional(readOnly = true)
   public List<PostDto> searchPost(PostInDto inDto) throws Exception {
@@ -65,7 +66,7 @@ public class PostService {
               // 인증샷이 있는 경우 인증샷 정보를 조회하여 Dto에 담음
               AfterRunPictureDto afterRunPictureDto = new AfterRunPictureDto();
               if (post.getArriveYn()) {
-                // 완료된 postId 기준으로 인증샷 내역을 가져온다.
+                // 완료된 postId 기준으로 인증샷 조회
                 afterRunPictureDto = viewAfterRunPictureForPost(post);
 
               }
@@ -91,10 +92,9 @@ public class PostService {
                   .fileId(afterRunPictureDto.getFileId())
                   .build();
             }
-
+        // 인증샷이 완료된 경우에만 리스트에 포함
         ).filter(post -> !post.getArriveYn() || (post.getArriveYn()
             && post.getAfterRunPictureUrl() != null))
-        // 인증샷이 완료된 경우에만 리스트에 포함
         .collect(Collectors.toList());
 
 
@@ -102,10 +102,11 @@ public class PostService {
 
 
   /**
-   * 인증샷 조회 메서드
+   * 인증샷 조회 메서드 (모집글 조회 메서드 내에서 사용됨)
    */
   public AfterRunPictureDto viewAfterRunPictureForPost(Post post) {
     log.info("인증샷 조회 요청 : 모집글Id = {}", post.getPostId());
+
     Optional<AfterRunPicture> afterRunPicture = afterRunPictureRepository.findByPost(post);
     if (afterRunPicture.isPresent()) {
       AfterRunPicture picture = afterRunPicture.get();
@@ -131,6 +132,7 @@ public class PostService {
 
   /**
    * 특정 모집글의 상세 정보를 조회하는 메서드
+   * 모집글 상세정보 & 함께 참가한 사용자들의 정보
    */
   @Transactional(readOnly = true)
   public PostDto searchDetailPost(Long postId) throws Exception {
@@ -192,7 +194,7 @@ public class PostService {
         .arriveYn(false)
         .build());
 
-    log.info("[RUNNERS LOG] register postId: {} ", post.getPostId());
+    log.info("[RUNNERS LOG] 모집글 작성 postId: {} ", post.getPostId());
 
     // 그룹 사용자에 그룹장 추가
     UserPost userPost = new UserPost();
@@ -204,7 +206,7 @@ public class PostService {
     userPost.setMonth(postDto.getStartDateTime().getMonthValue());
     userPostRepository.save(userPost);
 
-    log.info("[RUNNERS LOG] register userPost userId : {} ", user.getId());
+    log.info("[RUNNERS LOG] 그룹 사용자 추가 userId : {} ", user.getId());
 
     return post;
 
@@ -235,7 +237,7 @@ public class PostService {
       post.setPath(postDto.getPath());
       postRepository.save(post);
 
-      log.info("[RUNNERS LOG] modify postId : {} ", post.getPostId());
+      log.info("[RUNNERS LOG] 모집글 수정 postId : {} ", post.getPostId());
 
     } else {
       throw new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA);
@@ -266,12 +268,11 @@ public class PostService {
       if (delCnt < 0) {
         throw new RunnersMapException(ErrorCode.NOT_FOUND_USER);
       }
-      log.info("[RUNNERS LOG] delete userPost Cnt : {} ", delCnt);
+      log.info("[RUNNERS LOG] 삭제된 참여자 수 : {} ", delCnt);
 
       // 2. Post 데이터 삭제 (모집글 삭제)
       postRepository.deleteById(post.getPostId());
-
-      log.info("[RUNNERS LOG] delete postId : {} ", postId);
+      log.info("[RUNNERS LOG] 모집글 삭제 postId : {} ", postId);
 
     } else {
       throw new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA);
