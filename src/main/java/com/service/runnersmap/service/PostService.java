@@ -15,6 +15,7 @@ import com.service.runnersmap.repository.PostRepository;
 import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.repository.UserRepository;
 import com.service.runnersmap.type.ErrorCode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -169,10 +170,12 @@ public class PostService {
     User user = userRepository.findById(postDto.getAdminId())
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
-    // 그룹장은 진행중인 건이 러닝 내역이 있다면 완료 혹은 삭제 후에 추가 가능하도록 변경.
-    boolean dupYn = postRepository.existsByAdminIdAndArriveYnIsFalse(postDto.getAdminId());
-    if (dupYn) {
-      throw new RunnersMapException(ErrorCode.ALREADY_EXISTS_POST_DATA);
+    LocalDate newPostDate = postDto.getStartDateTime().toLocalDate();
+    boolean hasConflict =
+        userPostRepository.existsByUser_IdAndPost_StartDateTime_DateAndValidYnIsTrue(user.getId(), newPostDate);
+
+    if (hasConflict) {
+      throw new RunnersMapException(ErrorCode.OVERLAPPING_POST_DATE);
     }
 
     // post 엔티티 저장

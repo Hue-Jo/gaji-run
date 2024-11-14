@@ -64,14 +64,14 @@ public class UserPostService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
-    Post newPost = postRepository.findById(postId)
+    Post post = postRepository.findById(postId)
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA));
 
     // 이미 출발/도착한 상태의 모집글인 경우, 참여할 수 없도록 함
-    if (newPost.getDepartureYn()) {
+    if (post.getDepartureYn()) {
       throw new RunnersMapException(ErrorCode.ALREADY_DEPARTURE_POST_DATA);
     }
-    if (newPost.getArriveYn()) {
+    if (post.getArriveYn()) {
       throw new RunnersMapException(ErrorCode.ALREADY_COMPLETE_POST_DATA);
     }
 
@@ -83,28 +83,23 @@ public class UserPostService {
     }
 
 
-    // 새로운 모집글에 참여할 때 기존 모집글의 시작일 이후 날짜로 제한  (다음날부터 새로운 모집글에 참여 가능)
-    List<UserPost> existingUserPosts = userPostRepository.findByUser_IdAndValidYnIsTrue(userId);
-
-    for (UserPost existingPost : existingUserPosts) {
-      LocalDate existingPostStartDate = existingPost.getPost().getStartDateTime().toLocalDate();
-      LocalDate newPostSTartDate = newPost.getStartDateTime().toLocalDate();
-
-      if (!newPostSTartDate.isAfter(existingPostStartDate)) {
-        throw new RunnersMapException(ErrorCode.OVERLAPPING_POST_DATE);
-      }
+    // 이전에 참여하기로 한 러닝 날짜 외의 모집글에만 새롭게 참여할 수 있도록 함
+    LocalDate newPostDate = post.getStartDateTime().toLocalDate();
+    boolean hasConflict = userPostRepository.existsByUser_IdAndPost_StartDateTime_DateAndValidYnIsTrue(userId, newPostDate);
+    if (hasConflict) {
+      throw new RunnersMapException(ErrorCode.OVERLAPPING_POST_DATE);
     }
+
 
     // 참여자 정보 저장
     UserPost newUserPost = new UserPost();
     newUserPost.setUser(user);
-    newUserPost.setPost(newPost);
+    newUserPost.setPost(post);
     newUserPost.setValidYn(true);
-    newUserPost.setTotalDistance(newPost.getDistance());
-    newUserPost.setYear(newPost.getStartDateTime().getYear());
-    newUserPost.setMonth(newPost.getStartDateTime().getMonthValue());
+    newUserPost.setTotalDistance(post.getDistance());
+    newUserPost.setYear(post.getStartDateTime().getYear());
+    newUserPost.setMonth(post.getStartDateTime().getMonthValue());
     userPostRepository.save(newUserPost);
-
 
   }
 

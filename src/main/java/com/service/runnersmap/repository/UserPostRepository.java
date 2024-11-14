@@ -1,6 +1,7 @@
 package com.service.runnersmap.repository;
 
 import com.service.runnersmap.entity.UserPost;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,12 @@ public interface UserPostRepository extends JpaRepository<UserPost, Long> {
   // 사용자가 참여한 모든 모집글 리스트 조회 (유효한 모집글만)
   List<UserPost> findByUser_IdAndValidYnIsTrue(Long userId);
 
+  @Query("SELECT CASE WHEN COUNT(u) > 0 THEN TRUE ELSE FALSE END " +
+      "FROM UserPost u " +
+      "WHERE u.user.id = :userId " +
+      "AND FUNCTION('DATE', u.post.startDateTime) = :startDate " +
+      "AND u.validYn = TRUE")
+  boolean existsByUser_IdAndPost_StartDateTime_DateAndValidYnIsTrue(@Param("userId")  Long userId, @Param("startDate") LocalDate startDate);
   // 유저별 러닝리스트
   List<UserPost> findAllByUser_IdAndValidYnIsTrueAndActualEndTimeIsNull(Long userId);
 
