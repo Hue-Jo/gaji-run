@@ -1,6 +1,8 @@
 package com.service.runnersmap.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,8 +17,12 @@ public class PostInDto {
   private Integer paceMinEnd;
   private Long distanceStart;
   private Long distanceEnd;
-  private LocalDate startDate;
-  private String startTime;
+
+  private LocalDate firstStartDate;
+  private LocalTime firstStartTime;
+  private LocalDate secondStartDate;
+  private LocalTime secondStartTime;
+
   private Integer limitMemberCntStart;
   private Integer limitMemberCntEnd;
 
