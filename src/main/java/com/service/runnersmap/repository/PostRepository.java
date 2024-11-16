@@ -2,6 +2,7 @@ package com.service.runnersmap.repository;
 
 import com.service.runnersmap.entity.Post;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,11 +39,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 //          "AND (:startDate IS NULL OR (p.start_date_time BETWEEN :startDate AND DATE_ADD(:startDate, INTERVAL 1 DAY))) " +
 //          "AND (:startTime IS NULL OR TIME_FORMAT(p.start_date_time, '%H%i') = :startTime) " +
 
-          // 날짜/시간 필터
-          "AND (:firstStartDate IS NULL OR :firstStartTime IS NULL OR " +
-          "p.start_date_time >= CONCAT(:firstStartDate, ' ', :firstStartTime)) " +
-          "AND (:secondStartDate IS NULL OR :secondStartTime IS NULL OR " +
-          "p.start_date_time <= CONCAT(:secondStartDate, ' ', :secondStartTime)) " +
+          // 사용자가 지정한 특정 날짜/시간 사이의 모든 모집글 조회
+          "AND (:startDateTime IS NULL OR p.start_date_time >= :startDateTime) " +
+          "AND (:endDateTime IS NULL OR p.start_date_time <= :endDateTime) " +
 
           // 인원수 필터
           "AND (:limitMemberCntStart IS NULL OR p.limit_member_cnt >= :limitMemberCntStart)" +
@@ -59,10 +58,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
       @Param("paceMinEnd") Integer paceMinEnd,
       @Param("distanceStart") Long distanceStart,
       @Param("distanceEnd") Long distanceEnd,
-      @Param("firstStartDate") LocalDate firstStartDate,
-      @Param("firstStartTime") LocalTime firstStartTime,
-      @Param("secondStartDate") LocalDate secondStartDate,
-      @Param("secondStartTime") LocalTime secondStartTime,
+      @Param("startDateTime") LocalDateTime startDateTime,
+      @Param("endDateTime") LocalDateTime endDateTime,
       @Param("limitMemberCntStart") Integer limitMemberCntStart,
       @Param("limitMemberCntEnd") Integer limitMemberCntEnd
   );

@@ -56,10 +56,8 @@ public class PostService {
         inDto.getPaceMinEnd(),
         inDto.getDistanceStart(),
         inDto.getDistanceEnd(),
-        inDto.getFirstStartDate(),
-        inDto.getFirstStartTime(),
-        inDto.getSecondStartDate(),
-        inDto.getSecondStartTime(),
+        inDto.getStartDateTime(),
+        inDto.getEndDateTime(),
         inDto.getLimitMemberCntStart(),
         inDto.getLimitMemberCntEnd()
     );

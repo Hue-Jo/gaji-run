@@ -18,10 +18,8 @@ public class PostInDto {
   private Long distanceStart;
   private Long distanceEnd;
 
-  private LocalDate firstStartDate;
-  private LocalTime firstStartTime;
-  private LocalDate secondStartDate;
-  private LocalTime secondStartTime;
+  private LocalDateTime startDateTime;
+  private LocalDateTime endDateTime;
 
   private Integer limitMemberCntStart;
   private Integer limitMemberCntEnd;
