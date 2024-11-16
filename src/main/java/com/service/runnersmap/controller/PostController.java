@@ -5,10 +5,14 @@ import com.service.runnersmap.dto.PostInDto;
 import com.service.runnersmap.entity.Post;
 import com.service.runnersmap.service.PostService;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,8 +45,8 @@ public class PostController {
       @RequestParam(value = "paceMinEnd", required = false) Integer paceMinEnd,
       @RequestParam(value = "distanceStart", required = false) Long distanceStart,
       @RequestParam(value = "distanceEnd", required = false) Long distanceEnd,
-      @RequestParam(value = "startDate", required = false) LocalDate startDate,
-      @RequestParam(value = "startTime", required = false) String startTime,
+      @RequestParam(value = "startDateTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime, 
+      @RequestParam(value = "endDateTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime,
       @RequestParam(value = "limitMemberCntStart", required = false) Integer limitMemberCntStart,
       @RequestParam(value = "limitMemberCntEnd", required = false) Integer limitMemberCntEnd
   ) throws Exception {
@@ -55,8 +59,8 @@ public class PostController {
         .paceMinEnd(paceMinEnd)
         .distanceStart(distanceStart)
         .distanceEnd(distanceEnd)
-        .startDate(startDate)
-        .startTime(startTime)
+        .startDateTime(startDateTime)
+        .endDateTime(endDateTime)
         .limitMemberCntStart(limitMemberCntStart)
         .limitMemberCntEnd(limitMemberCntEnd)
         .build();
