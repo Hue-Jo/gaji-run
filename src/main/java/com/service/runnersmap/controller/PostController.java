@@ -45,7 +45,7 @@ public class PostController {
       @RequestParam(value = "paceMinEnd", required = false) Integer paceMinEnd,
       @RequestParam(value = "distanceStart", required = false) Long distanceStart,
       @RequestParam(value = "distanceEnd", required = false) Long distanceEnd,
-      @RequestParam(value = "startDateTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime, 
+      @RequestParam(value = "startDateTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
       @RequestParam(value = "endDateTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime,
       @RequestParam(value = "limitMemberCntStart", required = false) Integer limitMemberCntStart,
       @RequestParam(value = "limitMemberCntEnd", required = false) Integer limitMemberCntEnd
