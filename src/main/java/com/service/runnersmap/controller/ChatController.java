@@ -1,6 +1,8 @@
 package com.service.runnersmap.controller;
 
 import com.service.runnersmap.dto.ChatMessageDto;
+import com.service.runnersmap.dto.ChatRoomDto;
+import com.service.runnersmap.entity.ChatRoom;
 import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.service.ChatService;
 import java.util.List;
@@ -9,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +26,21 @@ public class ChatController {
 
   private final ChatService chatService;
   private final UserPostRepository userPostRepository;
+
+  /**
+   * 채팅방 생성
+   */
+  @PostMapping("/room")
+  public ResponseEntity<ChatRoomDto> createChatRoom(@RequestParam Long userId, @RequestParam Long postId) {
+
+      ChatRoom chatRoom = chatService.createChatRoom(userId, postId);
+      ChatRoomDto chatRoomDto = ChatRoomDto.builder()
+          .chatRoomId(chatRoom.getId())
+          .postId(chatRoom.getPost().getPostId())
+          .build();
+      return ResponseEntity.ok(chatRoomDto);
+  }
+
 
   /**
    * 채팅방에 처음 접속할 때 입장 알림 메시지 전송
@@ -49,7 +66,7 @@ public class ChatController {
    * 메시지 전송
    */
   @MessageMapping(value = "/message")
-  @SendTo("/sub/chat/room/{chatRoomId}")
+  // @SendTo("/sub/chat/room/{chatRoomId}")
   public void sendMessage(ChatMessageDto message) {
     validateUserAccess(message.getSenderId(), message.getChatRoomId());
     try {

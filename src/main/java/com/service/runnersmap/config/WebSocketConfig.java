@@ -30,10 +30,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     // 현재는 메모리 내 브로커를 사용하여 시도해보고 있습니다.
     // 이후에 외부 메시지 브로커로 변경 고려해야 할 듯합니다.
-    registry.enableSimpleBroker("/sub");  // (서버 -> 클라이언트) 메시지 받기
+    registry.enableSimpleBroker("/sub", "/user/queue/chat");  // (서버 -> 클라이언트) 메시지 받기
     registry.setApplicationDestinationPrefixes("/pub");    // (클라이언트 -> 서버) 메시지 보내기
-
-    log.info("메시지 브로커 설정 완료 : '브로커 /sub', '목적지 /pub'로 설정");
+    registry.setUserDestinationPrefix("/user");
 
   }
 

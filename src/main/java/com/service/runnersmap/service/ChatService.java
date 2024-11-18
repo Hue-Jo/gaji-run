@@ -3,10 +3,12 @@ package com.service.runnersmap.service;
 import com.service.runnersmap.dto.ChatMessageDto;
 import com.service.runnersmap.entity.ChatMessage;
 import com.service.runnersmap.entity.ChatRoom;
+import com.service.runnersmap.entity.Post;
 import com.service.runnersmap.entity.User;
 import com.service.runnersmap.exception.RunnersMapException;
 import com.service.runnersmap.repository.ChatMessageRepository;
 import com.service.runnersmap.repository.ChatRoomRepository;
+import com.service.runnersmap.repository.PostRepository;
 import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.repository.UserRepository;
 import com.service.runnersmap.type.ErrorCode;
@@ -27,11 +29,38 @@ public class ChatService {
   private final UserRepository userRepository;
   private final UserPostRepository userPostRepository;
   private final SimpMessagingTemplate template;
+  private final PostRepository postRepository;
 
 
   // 사용자가 모집글에 참여했는지 확인하는 메서드
   private boolean isUserParticipatingInPost(Long userId, Long postId) {
     return userPostRepository.findByUserIdAndPostPostId(userId, postId).isPresent();
+  }
+
+  /**
+   * 채팅방 생성
+   */
+  public ChatRoom createChatRoom(Long userId, Long postId) {
+
+    Post post = postRepository.findById(postId)
+        .orElseThrow(() -> new RuntimeException("존재하지 않는 모집글"));
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+    // 사용자가 모집글에 참여했는지 확인
+    if (!isUserParticipatingInPost(userId, postId)) {
+      throw new RunnersMapException(ErrorCode.NOT_POST_INCLUDE_USER);
+    }
+
+    // 이미 해당 모집글에 대한 채팅방이 존재하는지 확인
+    if (chatRoomRepository.findByPost_PostId(postId).isPresent()) {
+      throw new RuntimeException("이미 해당 모집글에 대한 채팅방이 존재합니다.");
+    }
+
+    ChatRoom chatRoom = ChatRoom.builder().post(post).build();
+
+  return chatRoomRepository.save(chatRoom);
   }
 
   /**
@@ -52,6 +81,7 @@ public class ChatService {
       throw new RunnersMapException(ErrorCode.NOT_POST_INCLUDE_USER);
     }
 
+    // 입장 알림메시지 (모든 사용자에게 전송)
     String enterMessage = sender.getNickname() + "님이 채팅방에 입장하셨습니다.";
     chatMessageDto = ChatMessageDto.builder()
         .senderNickname(sender.getNickname())
@@ -59,11 +89,9 @@ public class ChatService {
         .build();
     template.convertAndSend("/sub/chat/room/" + chatRoom.getId(), chatMessageDto);
 
-    // 이전 메시지들 불러오기
+    // 이전 메시지들 불러오기 (입장한 사용자에게만 전송되도록 수정)
     List<ChatMessageDto> previousMessages = getMessages(chatRoom.getId());
-    for (ChatMessageDto previousMessage : previousMessages) {
-      template.convertAndSend("/sub/chat/room/" + chatRoom.getId(), previousMessage);
-    }
+    template.convertAndSendToUser(sender.getId().toString(),"/user/queue/chat/room/" + chatRoom.getId(), previousMessages);
 
   }
 //
