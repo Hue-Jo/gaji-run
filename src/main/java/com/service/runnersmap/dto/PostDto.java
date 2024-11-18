@@ -1,10 +1,7 @@
 package com.service.runnersmap.dto;
 
-import com.service.runnersmap.converter.PathListConverter;
 import com.service.runnersmap.entity.Path;
 import com.service.runnersmap.entity.Post;
-import com.service.runnersmap.entity.UserPost;
-import jakarta.persistence.Convert;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -48,13 +45,12 @@ public class PostDto {
 
   private Boolean arriveYn; //도착여부
 
-//  private Long chatRoomId; //채팅방 ID
+  private Long chatRoomId; // 채팅방 ID
 
   private Double centerLat;
 
   private Double centerLng;
 
-  // 인증샷 관련 추가
   private Long fileId; // 인증샷 Id
 
   private String afterRunPictureUrl;  // 인증샷
@@ -82,6 +78,7 @@ public class PostDto {
         .paceMin(post.getPaceMin())
         .paceSec(post.getPaceSec())
         .path(post.getPath())
+        .chatRoomId(post.getChatRoom() != null ? post.getChatRoom().getId() : null)
         .centerLat(post.getLat())
         .centerLng(post.getLng())
         .departureYn(post.getDepartureYn())
