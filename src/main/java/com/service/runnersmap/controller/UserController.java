@@ -8,6 +8,7 @@ import com.service.runnersmap.dto.UserDto.LastPositionDto;
 import com.service.runnersmap.dto.UserDto.LoginDto;
 import com.service.runnersmap.dto.UserDto.SignUpDto;
 import com.service.runnersmap.service.UserService;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,7 @@ public class UserController {
 
   // 로그인 API
   @PostMapping("/login")
-  public ResponseEntity<LoginResponse> login(@RequestBody LoginDto loginDto) {
+  public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginDto loginDto) {
     LoginResponse tokenResponse = userService.login(loginDto);
     return ResponseEntity.ok(tokenResponse); // 200 OK
   }

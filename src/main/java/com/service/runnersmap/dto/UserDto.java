@@ -1,5 +1,10 @@
 package com.service.runnersmap.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +32,11 @@ public class UserDto {
   @Builder
   public static class LoginDto {
 
+    @Email(message = "이메일 형식에 맞게 입력해주세요")
+    @NotBlank(message = "이메일을 입력하세요.")
     private String email;
+
+    @NotBlank(message = "비밀번호를 입력해주세요. 소문자, 숫자, 특수문자 포함 8자 이상")
     private String password;
   }
 
