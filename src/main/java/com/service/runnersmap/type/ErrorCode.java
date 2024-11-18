@@ -36,6 +36,8 @@ public enum ErrorCode {
 
   OVERLAPPING_POST_DATE("이전 러닝 날짜와 겹칩니다. 마지막 러닝 다음날부터 새롭게 참여 가능합니다"),
 
+  CHAR_ROOM_CREATION_FAILED("채팅방 생성에 실패했습니다."),
+
   // 유저 관련 에러코드
   INVALID_REFRESH_TOKEN("유효하지 않은 토큰입니다."),
 

@@ -89,7 +89,7 @@ public class PostController {
    * 러닝모집글 신규 등록
    */
   @PostMapping
-  public ResponseEntity<Post> registerPost(@RequestBody PostDto postDto
+  public ResponseEntity<PostDto> registerPost(@RequestBody PostDto postDto
   ) throws Exception {
     return ResponseEntity.ok(postService.registerPost(postDto));
   }

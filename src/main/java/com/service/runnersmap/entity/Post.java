@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,11 +37,14 @@ public class Post {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "post_id")
-  private Long postId; //메이트모집글ID
+  private Long postId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "users_id")
   private User admin;
+
+  @OneToOne(mappedBy = "post")
+  private ChatRoom chatRoom; // 연결된 채팅방
 
   @Column(nullable = false)
   private String title; //제목

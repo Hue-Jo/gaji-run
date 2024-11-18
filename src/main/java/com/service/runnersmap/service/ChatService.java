@@ -45,13 +45,8 @@ public class ChatService {
     Post post = postRepository.findById(postId)
         .orElseThrow(() -> new RuntimeException("존재하지 않는 모집글"));
 
-    User user = userRepository.findById(userId)
+    userRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
-
-    // 사용자가 모집글에 참여했는지 확인
-    if (!isUserParticipatingInPost(userId, postId)) {
-      throw new RunnersMapException(ErrorCode.NOT_POST_INCLUDE_USER);
-    }
 
     // 이미 해당 모집글에 대한 채팅방이 존재하는지 확인
     if (chatRoomRepository.findByPost_PostId(postId).isPresent()) {
@@ -59,6 +54,7 @@ public class ChatService {
     }
 
     ChatRoom chatRoom = ChatRoom.builder().post(post).build();
+    post.setChatRoom(chatRoom);
 
   return chatRoomRepository.save(chatRoom);
   }

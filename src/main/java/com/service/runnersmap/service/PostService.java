@@ -5,6 +5,7 @@ import com.service.runnersmap.dto.PostDto;
 import com.service.runnersmap.dto.PostInDto;
 import com.service.runnersmap.dto.PostUserDto;
 import com.service.runnersmap.entity.AfterRunPicture;
+import com.service.runnersmap.entity.ChatRoom;
 import com.service.runnersmap.entity.Post;
 import com.service.runnersmap.entity.User;
 import com.service.runnersmap.entity.UserPost;
@@ -30,14 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
 
   private final PostRepository postRepository;
-
   private final UserPostRepository userPostRepository;
-
   private final UserRepository userRepository;
-
   private final AfterRunPictureRepository afterRunPictureRepository;
-
   private final LikesRepository likesRepository;
+  private final ChatService chatService;
 
 
   /**
@@ -93,7 +91,7 @@ public class PostService {
                   .fileId(afterRunPictureDto.getFileId())
                   .build();
             }
-        // 인증샷이 완료된 경우에만 리스트에 포함
+            // 인증샷이 완료된 경우에만 리스트에 포함
         ).filter(post -> !post.getArriveYn() || (post.getArriveYn()
             && post.getAfterRunPictureUrl() != null))
         .collect(Collectors.toList());
@@ -164,7 +162,7 @@ public class PostService {
    * 모집글 등록 메서드
    */
   @Transactional
-  public Post registerPost(PostDto postDto) throws Exception {
+  public PostDto registerPost(PostDto postDto) throws Exception {
 
     // admin(그룹장)이 유효한 사용자인지 확인
     User user = userRepository.findById(postDto.getAdminId())
@@ -178,7 +176,7 @@ public class PostService {
       throw new RunnersMapException(ErrorCode.OVERLAPPING_POST_DATE);
     }
 
-    // post 엔티티 저장
+    // post 객체 생성 (chatRoom 연결없이 먼저 생성)
     Post post = postRepository.save(Post.builder()
         .admin(user)
         .title(postDto.getTitle())
@@ -197,7 +195,16 @@ public class PostService {
         .arriveYn(false)
         .build());
 
+    postRepository.save(post);
     log.info("[RUNNERS LOG] 모집글 작성 postId: {} ", post.getPostId());
+
+    // chatRoom 생성 (Post와 연결)
+    ChatRoom chatRoom = chatService.createChatRoom(user.getId(), post.getPostId());
+    post.setChatRoom(chatRoom);
+    postRepository.save(post); // Post와 ChatRoom 관계 저장
+
+    log.info("[RUNNERS LOG] 모집글 작성 완료 postId: {} ", post.getPostId());
+
 
     // 그룹 사용자에 그룹장 추가
     UserPost userPost = new UserPost();
@@ -211,7 +218,7 @@ public class PostService {
 
     log.info("[RUNNERS LOG] 그룹 사용자 추가 userId : {} ", user.getId());
 
-    return post;
+    return PostDto.fromEntity(post);
 
   }
 

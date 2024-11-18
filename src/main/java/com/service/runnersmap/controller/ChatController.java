@@ -27,22 +27,8 @@ public class ChatController {
   private final ChatService chatService;
   private final UserPostRepository userPostRepository;
 
-  /**
-   * 채팅방 생성
-   */
-  @PostMapping("/room")
-  public ResponseEntity<ChatRoomDto> createChatRoom(@RequestParam Long userId, @RequestParam Long postId) {
 
-      ChatRoom chatRoom = chatService.createChatRoom(userId, postId);
-      ChatRoomDto chatRoomDto = ChatRoomDto.builder()
-          .chatRoomId(chatRoom.getId())
-          .postId(chatRoom.getPost().getPostId())
-          .build();
-      return ResponseEntity.ok(chatRoomDto);
-  }
-
-
-  /**
+   /**
    * 채팅방에 처음 접속할 때 입장 알림 메시지 전송
    */
   @MessageMapping(value = "/enter")
