@@ -77,8 +77,8 @@ public class UserService {
    */
   @Transactional
   public LoginResponse login(LoginDto loginDto) {
-    log.info("로그인 요청: {} ", loginDto.getEmail())
-    ;
+    log.info("로그인 요청: {} ", loginDto.getEmail());
+
     User user = userRepository.findByEmail(loginDto.getEmail())
         .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_USER));
 
