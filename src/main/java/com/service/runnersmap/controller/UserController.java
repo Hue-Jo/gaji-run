@@ -1,12 +1,14 @@
 package com.service.runnersmap.controller;
 
 import com.service.runnersmap.dto.LoginResponse;
+import com.service.runnersmap.dto.UserDto;
 import com.service.runnersmap.dto.UserDto.AccountDeleteDto;
 import com.service.runnersmap.dto.UserDto.AccountInfoDto;
 import com.service.runnersmap.dto.UserDto.AccountUpdateDto;
 import com.service.runnersmap.dto.UserDto.LastPositionDto;
 import com.service.runnersmap.dto.UserDto.LoginDto;
 import com.service.runnersmap.dto.UserDto.SignUpDto;
+import com.service.runnersmap.service.CustomOAuth2UserService;
 import com.service.runnersmap.service.UserService;
 import jakarta.validation.Valid;
 import java.io.IOException;
@@ -31,12 +33,23 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
   private final UserService userService;
+  private final CustomOAuth2UserService  customOAuth2UserService;
 
   // 회원가입 API
   @PostMapping("/sign-up")
   public ResponseEntity<Void> signUp(@RequestBody SignUpDto signUpDto) {
     userService.signUp(signUpDto);
     return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
+  }
+
+
+  // 소셜 로그인 첫 시도시, 추가 정보 입력
+  @PostMapping("/complete-sign-up")
+  public ResponseEntity<LoginResponse> completeSignUp(
+      @RequestParam String email,
+      @RequestBody @Valid UserDto.CompleteSignUpDto completeSignUpDto) {
+    LoginResponse loginResponse = customOAuth2UserService.completeSignUp(email,completeSignUpDto);
+    return ResponseEntity.status(HttpStatus.CREATED).body(loginResponse);
   }
 
 

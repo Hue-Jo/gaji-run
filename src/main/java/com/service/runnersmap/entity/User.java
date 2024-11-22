@@ -20,10 +20,10 @@ public class User {
   @Column(name = "email", nullable = false)
   private String email;
 
-  @Column(name = "password", nullable = false)
+  @Column(name = "password")
   private String password;
 
-  @Column(name = "nickname", nullable = false)
+  @Column(name = "nickname")
   private String nickname;
 
   @Column(name = "gender")
@@ -40,6 +40,5 @@ public class User {
 
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
-
 }
 
