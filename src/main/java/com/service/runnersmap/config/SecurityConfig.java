@@ -63,7 +63,7 @@ public class SecurityConfig {
 //  public UrlBasedCorsConfigurationSource corsConfigurationSource() {
 //    CorsConfiguration configuration = new CorsConfiguration();
 //    configuration.setAllowCredentials(false); // 인증 관련 설정
-//    configuration.addAllowedOriginPattern("http://3.37.126.40"); // 모든 도메인을 허용 (cors관련)
+//    configuration.addAllowedOriginPattern("http://");
 //    configuration.addAllowedHeader("*"); // 모든 헤더 허용
 //    configuration.addAllowedMethod("*"); // 모든 메서드 허용 (GET, POST, PUT, DELETE 등)
 //
