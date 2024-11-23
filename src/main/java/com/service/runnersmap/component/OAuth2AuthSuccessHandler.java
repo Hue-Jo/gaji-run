@@ -68,7 +68,7 @@ public class OAuth2AuthSuccessHandler implements AuthenticationSuccessHandler {
           user.getLastPosition(),
           user.getProfileImageUrl());
 
-      // JSON 응답으로 반환 or 특정 페이지로 리디렉션하는 방법도 있음
+      // JSON 응답으로 반환(현재상태) // 특정 페이지로 리디렉션하는 방법도 있다고 함
       response.setContentType("application/json");
       response.setCharacterEncoding("UTF-8");
       response.getWriter()
