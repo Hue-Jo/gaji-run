@@ -1,6 +1,10 @@
 package com.service.runnersmap.config;
 
 import com.service.runnersmap.component.JwtFilter;
+import com.service.runnersmap.component.OAuth2AuthSuccessHandler;
+import com.service.runnersmap.service.CustomOAuth2UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,9 +17,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+  private final CustomOAuth2UserService customOAuth2UserService;
+  private final OAuth2AuthSuccessHandler oAuth2AuthSuccessHandler;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -33,15 +42,35 @@ public class SecurityConfig {
             .requestMatchers(
                 "/api/user/sign-up",
                 "/api/user/login",
-                "/api/user/refresh"
-            ).permitAll()
+                "/api/user/refresh")
+            .permitAll()
             .anyRequest().authenticated()
+        )
+        .oauth2Login(oauth2 -> oauth2
+            .loginPage("/oauth2/authorization/google")
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(customOAuth2UserService)
+            )
+            .successHandler(oAuth2AuthSuccessHandler)
         )
         // 폼 로그인 기능을 비활성화
         .formLogin(form -> form.disable())
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // jwt 필터 추가
     return http.build();
   }
+
+//  @Bean
+//  public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+//    CorsConfiguration configuration = new CorsConfiguration();
+//    configuration.setAllowCredentials(false); // 인증 관련 설정
+//    configuration.addAllowedOriginPattern("http://");
+//    configuration.addAllowedHeader("*"); // 모든 헤더 허용
+//    configuration.addAllowedMethod("*"); // 모든 메서드 허용 (GET, POST, PUT, DELETE 등)
+//
+//    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//    source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 CORS 설정 적용
+//    return source;
+//  }
 
   @Bean
   public CorsFilter corsFilter() {

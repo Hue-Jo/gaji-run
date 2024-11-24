@@ -30,6 +30,19 @@ public class UserDto {
   @NoArgsConstructor
   @AllArgsConstructor
   @Builder
+  public static class CompleteSignUpDto {
+
+    @NotBlank(message = "닉네임을 입력해주세요")
+    private String nickname;  // 닉네임
+    @NotBlank(message = "성별을 입력해주세요.")
+    private String gender;    // 성별
+
+  }
+
+  @Getter
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
   public static class LoginDto {
 
     @Email(message = "이메일 형식에 맞게 입력해주세요")
