@@ -278,11 +278,15 @@ public class PostService {
       if (delCnt < 0) {
         throw new RunnersMapException(ErrorCode.NOT_FOUND_USER);
       }
-      log.info("[RUNNERS LOG] 삭제된 참여자 수 : {} ", delCnt);
+      log.info("삭제된 참여자 수 : {} ", delCnt);
 
-      // 2. Post 데이터 삭제 (모집글 삭제)
+      // 2. 연관된 채팅방 삭제
+      chatService.deleteChatRoom(post.getChatRoom().getId());
+      log.info("연관 채팅방 삭제 postId : {} ", postId);
+
+      // 3. 모집글 삭제
       postRepository.deleteById(post.getPostId());
-      log.info("[RUNNERS LOG] 모집글 삭제 postId : {} ", postId);
+      log.info("모집글 삭제 postId : {} ", postId);
 
     } else {
       throw new RunnersMapException(ErrorCode.NOT_FOUND_POST_DATA);

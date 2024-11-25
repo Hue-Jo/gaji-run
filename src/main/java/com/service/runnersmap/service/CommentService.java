@@ -4,7 +4,6 @@ import com.service.runnersmap.dto.CommentDto;
 import com.service.runnersmap.entity.Comment;
 import com.service.runnersmap.entity.Post;
 import com.service.runnersmap.entity.User;
-import com.service.runnersmap.entity.UserPost;
 import com.service.runnersmap.exception.RunnersMapException;
 import com.service.runnersmap.repository.CommentRepository;
 import com.service.runnersmap.repository.PostRepository;

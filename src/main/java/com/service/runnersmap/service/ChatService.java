@@ -16,10 +16,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -166,5 +168,25 @@ public class ChatService {
             .sentAt(message.getSentAt())
             .build())
         .collect(Collectors.toList());
+  }
+
+
+  /**
+   * 모집글 삭제시 채팅방이 삭제되는 메서드
+   */
+  @Transactional
+  public void deleteChatRoom(Long chatRoomId) {
+
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RunnersMapException(ErrorCode.NOT_FOUND_CHATROOM));
+
+    List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(chatRoomId);
+    if (!messages.isEmpty()) {
+      chatMessageRepository.deleteAll(messages);
+      log.info("채팅방 메시지 삭제 완료 chatRoomId : {}", chatRoomId);
+    }
+
+    chatRoomRepository.delete(chatRoom);
+    log.info("채팅방 삭제 완료 chatRoomId : {}", chatRoomId);
   }
 }

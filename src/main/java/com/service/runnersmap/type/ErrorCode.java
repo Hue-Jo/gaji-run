@@ -61,6 +61,9 @@ public enum ErrorCode {
 
   TOO_LONG_COMMENT("댓글은 200자 이하로만 작성할 수 있습니다."),
 
+  // 채팅 관련 에러코드
+  NOT_FOUND_CHATROOM("존재하지 않는 채팅방입니다."),
+
   // 파일 관련 에러코드
   NOT_FOUND_FILE_DATA("파일을 찾을 수 없습니다."),
 
