@@ -9,6 +9,7 @@ import com.service.runnersmap.repository.RankRepository;
 import com.service.runnersmap.repository.UserPostRepository;
 import com.service.runnersmap.repository.UserRepository;
 import com.service.runnersmap.type.ErrorCode;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -37,9 +38,11 @@ public class RankService {
   @Transactional(readOnly = true)
   public Page<Rank> searchRankByMonth(Integer year, Integer month, Pageable pageable) throws Exception {
 
+    // 랭킹 조회 범위 설정 (1~100위)
     int startRankPosition = 1;
     int endRankPosition = 100;
 
+    // 특정 연,월에 해당하는 랭킹 조회 & 페이징처리
     return rankRepository.findAllByRankPositionBetweenAndYearAndMonthOrderByRankPosition(
         startRankPosition,
         endRankPosition,
@@ -65,20 +68,20 @@ public class RankService {
    * 월별 러닝 기록을 바탕으로 랭킹 계산/저장하는 메서드
    */
   @Transactional
-  public void saveRankingByMonth(Integer year, Integer month) throws Exception {
+  public void saveRankingByMonth(Integer year, Integer month, LocalDate batchExecutedDate) throws Exception {
 
-    // 조회년월 랭킹 데이터 삭제 (매일 초기화)
+    // 기존의 랭킹 데이터 삭제 (매일 초기화)
     rankRepository.deleteByYearAndMonth(year, month);
 
     // 조회년월의 유효한 러너 기록 (실제 종료 시간이 있는 기록만)
     List<UserPost> monthRunRecords = userPostRepository.findAllByValidYnIsTrueAndYearAndMonthAndActualEndTimeIsNotNull(
-        year,
-        month);
+        year, month);
     if (monthRunRecords.isEmpty()) {
+      log.info("유효한 러닝 기록이 존재하지 않습니다.");
       return;
     }
 
-    // 조회한 기록을 바탕으로 점수 계산
+    // 조회한 기록(러닝기록)을 바탕으로 점수 계산
     List<RankSaveDto> monthSortRank = monthRunRecords.stream()
         .map(userPost -> {
           // 거리, 시간 기반 점수 계산
@@ -92,6 +95,7 @@ public class RankService {
               .score(baseScore)
               .build();
         })
+        // 사용자 Id별로 그룹화하여 거리, 시간, 점수 합산
         .collect(Collectors.groupingBy(RankSaveDto::getUserId,
             Collectors.reducing((dto1, dto2) -> RankSaveDto.builder()
                 .userId(dto1.getUserId())
@@ -120,15 +124,8 @@ public class RankService {
           .rankPosition(++rank)
           .totalDistance(rankItem.getTotalDistance())
           .totalTime(rankItem.getRunningDuration())
+          .batchExecutedDate(batchExecutedDate)
           .build();
-
-//      Rank newRank = new Rank();
-//      newRank.setUser(user);
-//      newRank.setYear(year);
-//      newRank.setMonth(month);
-//      newRank.setRankPosition(++rank);
-//      newRank.setTotalDistance(rankItem.getTotalDistance());
-//      newRank.setTotalTime(rankItem.getRunningDuration());
 
       rankRepository.save(newRank);
     }

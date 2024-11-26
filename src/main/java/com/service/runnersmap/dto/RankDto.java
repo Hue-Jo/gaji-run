@@ -3,6 +3,7 @@ package com.service.runnersmap.dto;
 import com.service.runnersmap.entity.Rank;
 import com.service.runnersmap.service.UserPostService.DurationToStringConverter;
 import java.time.Duration;
+import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +25,8 @@ public class RankDto {
 
   private String profileImageUrl;
 
+  private LocalDate batchExecutedDate;
+
 
   public static RankDto fromEntity(Rank rank) {
     return RankDto.builder()
@@ -33,6 +36,7 @@ public class RankDto {
         .totalDistance(rank.getTotalDistance())
         .totalTime(DurationToStringConverter.convert(rank.getTotalTime()))
         .profileImageUrl(rank.getUser().getProfileImageUrl())
+        .batchExecutedDate(rank.getBatchExecutedDate())
         .build();
   }
 

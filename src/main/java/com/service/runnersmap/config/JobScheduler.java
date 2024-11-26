@@ -15,10 +15,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 @EnableScheduling
 public class JobScheduler {
+// 배치 작업의 실행주기 설정
 
-  private final JobLauncher jobLauncher;
+  private final JobLauncher jobLauncher; // Job을 실행시키는 역할
 
-  private final Job rankJob;
+  private final Job rankJob; // 랭킹계산 Job
 
 //  @Scheduled(cron = "*/10 * * * * *") // 10초에 한번(개발용)
   @Scheduled(cron = "0 0 0 * * *") // 매일 자정
@@ -26,13 +27,16 @@ public class JobScheduler {
   public void runJob() {
     try {
       LocalDate now = LocalDate.now();
+      // 현재 연월을 "yyyyMM"형식의 문자열로 변환
       String nowMonth = now.format(DateTimeFormatter.ofPattern("yyyyMM"));
 
+      // Job 실행에 필요한 파라미터 설정
       JobParameters jobParameters = new JobParametersBuilder()
           .addLong("time", System.currentTimeMillis())
           .addString("searchMonth", nowMonth)
           .toJobParameters();
 
+      // Job 실행
       jobLauncher.run(rankJob, jobParameters);
     } catch (Exception e) {
       e.printStackTrace();
