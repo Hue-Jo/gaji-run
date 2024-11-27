@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,6 +48,8 @@ public class Rank {
   private double totalDistance; //누적거리
 
   private Duration totalTime; //누적시간
+
+  private LocalDate batchExecutedDate; // 배치 실행 날짜
 
   @CreatedDate
   private LocalDateTime createdDateTime;
