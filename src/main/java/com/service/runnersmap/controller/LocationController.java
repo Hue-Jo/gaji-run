@@ -24,7 +24,7 @@ public class LocationController {
   /**
    * 사용자 위치 업데이트
    */
-  @PostMapping("/update")
+  @PostMapping
   public ResponseEntity<Void> updateLocation(@RequestBody LocationRequest request) {
     locationService.updateLocation(request);
     return ResponseEntity.ok().build();
